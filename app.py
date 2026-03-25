@@ -1,88 +1,66 @@
 import streamlit as st
 import pandas as pd
-import random
 
-st.set_page_config(page_title="Cybersecurity Quick Assessment", layout="wide")
+st.set_page_config(page_title="FortiGate Security Sizing Tool", layout="wide")
 
-# ---- Título ----
-st.title("🔒 Cybersecurity Quick Assessment")
+st.title("🛡️ FortiGate Security Sizing Tool")
 st.markdown("""
-Obtén un diagnóstico rápido del estado de tu seguridad de red.
-Identifica riesgos, conoce tu score y recibe recomendaciones prácticas.
+Ingresa tus parámetros y recibe una recomendación instantánea del modelo, licencias y features sugeridos.
+Ideal para clientes que buscan decisiones rápidas y confiables.
 """)
 
-# ---- Inputs: Estado actual ----
-st.header("1️⃣ Información básica")
-firewall_status = st.selectbox("Estado del firewall", ["No implementado", "Parcial", "Completo"])
-vpn_usage = st.selectbox("Uso de VPN", ["No usado", "Uso parcial", "Uso completo"])
-internet_exposure = st.slider("Exposición a internet (% de servicios expuestos)", 0, 100, 20)
-network_segmentation = st.selectbox("Segmentación de red", ["No segmentada", "Parcial", "Completa"])
+# ---- Inputs ----
+st.header("1️⃣ Datos de la organización")
+num_users = st.number_input("Número de usuarios", min_value=1, step=1, value=50)
+num_sites = st.number_input("Número de sedes", min_value=1, step=1, value=1)
+estimated_traffic = st.number_input("Tráfico estimado (Mbps)", min_value=1, step=1, value=100)
 
-# ---- Score y riesgos ----
-st.header("2️⃣ Resultado rápido")
+# ---- Lógica de sizing ----
+st.header("2️⃣ Resultado recomendado")
 
-# Generar score simple basado en inputs (solo ejemplo)
-score = 100
-if firewall_status == "No implementado":
-    score -= 30
-elif firewall_status == "Parcial":
-    score -= 10
+# Modelo FortiGate (ejemplo simplificado)
+def recommend_model(users, traffic):
+    if users <= 50 and traffic <= 200:
+        return "FortiGate 60F"
+    elif users <= 200 and traffic <= 1000:
+        return "FortiGate 100F"
+    elif users <= 500 and traffic <= 5000:
+        return "FortiGate 300E"
+    else:
+        return "FortiGate 600C+"
 
-if vpn_usage == "No usado":
-    score -= 20
-elif vpn_usage == "Uso parcial":
-    score -= 5
+model = recommend_model(num_users, estimated_traffic)
 
-score -= int(internet_exposure * 0.2)
+# Licencias sugeridas (simplificación)
+def suggest_licenses(users, model):
+    base = 1
+    if "60F" in model:
+        return f"{base} x FortiCare + 1 x UTM Bundle (IPS, AV, Web Filtering)"
+    elif "100F" in model:
+        return f"{base} x FortiCare + {users//50} x UTM Bundle"
+    elif "300E" in model:
+        return f"{base} x FortiCare + {users//100} x UTM Bundle"
+    else:
+        return f"{base} x FortiCare + {users//200} x UTM Bundle"
 
-if network_segmentation == "No segmentada":
-    score -= 20
-elif network_segmentation == "Parcial":
-    score -= 10
+licenses = suggest_licenses(num_users, model)
 
-score = max(score, 0)
+# Features recomendadas
+features = ["IPS", "Antivirus", "Web Filtering"]
+if num_sites > 1:
+    features.append("SD-WAN / VPN")
 
-st.subheader(f"🔹 Security Score: {score}/100")
+# ---- Output ----
+st.subheader(f"✅ Modelo recomendado: {model}")
+st.subheader("📄 Licencias sugeridas:")
+st.write(licenses)
+st.subheader("💡 Features sugeridos:")
+st.write(", ".join(features))
 
-# Riesgos detectados
-risks = []
-if firewall_status != "Completo":
-    risks.append("Firewall insuficiente")
-if vpn_usage != "Uso completo":
-    risks.append("VPN no aplicada correctamente")
-if internet_exposure > 50:
-    risks.append("Alta exposición a internet")
-if network_segmentation != "Completa":
-    risks.append("Segmentación de red insuficiente")
-
-st.subheader("⚠️ Riesgos detectados")
-if risks:
-    for r in risks:
-        st.write(f"- {r}")
-else:
-    st.write("✅ Sin riesgos críticos detectados")
-
-# ---- Roadmap de mejoras ----
-st.header("3️⃣ Roadmap recomendado")
-roadmap = {
-    "Firewall": "Actualizar o implementar reglas completas",
-    "VPN": "Asegurar uso completo en todos los accesos remotos",
-    "Segmentación": "Segregar la red por departamentos y servicios",
-    "Exposición a Internet": "Revisar y limitar servicios expuestos"
-}
-
-for k, v in roadmap.items():
-    st.write(f"**{k}:** {v}")
-
-# ---- Visualización simple ----
-st.header("📊 Visualización")
-chart_data = pd.DataFrame({
-    'Área': ['Firewall', 'VPN', 'Exposición Internet', 'Segmentación'],
-    'Score': [
-        100 if firewall_status == "Completo" else 50 if firewall_status == "Parcial" else 0,
-        100 if vpn_usage == "Uso completo" else 50 if vpn_usage == "Uso parcial" else 0,
-        max(0, 100 - internet_exposure),
-        100 if network_segmentation == "Completa" else 50 if network_segmentation == "Parcial" else 0
-    ]
+# ---- Visualización rápida ----
+st.header("📊 Resumen visual")
+summary = pd.DataFrame({
+    "Parámetro": ["Usuarios", "Sedes", "Tráfico (Mbps)"],
+    "Valor": [num_users, num_sites, estimated_traffic]
 })
-st.bar_chart(chart_data.set_index('Área'))
+st.table(summary)

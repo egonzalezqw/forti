@@ -3,9 +3,9 @@ import pandas as pd
 
 st.set_page_config(page_title="FortiGate Security Sizing Tool", layout="wide")
 
-st.title("🛡️ FortiGate Security Sizing Tool")
+st.title(" FortiGate Security Sizing Tool")
 st.markdown("""
-Ingresa tus parámetros y recibe una recomendación instantánea del modelo, licencias y features sugeridos.
+Ingresa las configuraciones y recibe una recomendación instantánea del modelo, licencias y features sugeridos.
 Ideal para clientes que buscan decisiones rápidas y confiables.
 """)
 
